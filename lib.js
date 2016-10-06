@@ -3,6 +3,8 @@
 //author: Onne Gorter
 //license: CC0
 
+/// an opiniated library to enhances the default js environment
+
 // simple assert
 function assert(c, desc) {
     if (c) return
@@ -11,7 +13,7 @@ function assert(c, desc) {
     throw e
 }
 
-// check if intact
+// check if sane
 assert(typeof(setInterval) === "function")
 
 // TAU is around the unit circle once: starting at x=1,y=0, clockwise to x=0,y=-1 (at TAU4)
@@ -24,23 +26,6 @@ const TAU16 = Math.PI / 8.0
 // reasonable maximum/minimum for js integer numbers
 const MAX_NUMBER = Math.pow(2, 51)
 const MIN_NUMBER = -Math.pow(2, 51)
-
-// lets not type in Math.obvious
-const sin = Math.sin
-const asin = Math.asin
-const cos = Math.cos
-const acos = Math.acos
-const tan = Math.tan
-const atan = Math.atan
-const atan2 = Math.atan2
-const round = Math.round
-const floor = Math.floor
-const ceil = Math.ceil
-const min = Math.min
-const max = Math.max
-const sqrt = Math.sqrt
-const pow = Math.pow
-const abs = Math.abs
 
 function isBool(o) { return typeof o === "boolean" }
 function isNumber(o) { return typeof o === "number" && !isNaN(o) }
@@ -64,7 +49,7 @@ function timeFromMillis(millis) { return millis / 1000.0 }
 // compare two floating point numbers to see if they are the same with a tolarance
 function fequals(f1, f2, within) {
     within = within || 0.1
-    return abs(f1 - f2) < within
+    return Math.abs(f1 - f2) < within
 }
 
 // modulo that results from 0..m exclusive (instead of -m .. m of just %)
@@ -121,12 +106,12 @@ function angleclamp(a, max) {
 
 // pythagoras distance without square root
 function dist2(x1, x2, y1, y2) {
-    return pow(x1 - x2, 2) + pow(y1 - y2, 2)
+    return Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)
 }
 
 // pythagoras distance
 function dist(x1, x2, y1, y2) {
-    return sqrt(dist2(x1, x2, y1, y2))
+    return Math.sqrt(dist2(x1, x2, y1, y2))
 }
 
 // distance between a line and a point without square root
@@ -141,7 +126,7 @@ function linePointDist2(lx1, ly1, lx2, ly2, px, py) {
 
 // distance between a line and a point
 function linePointDist(lx1, ly1, lx2, ly2, px, py) {
-    return sqrt(linePointDist2(lx1, ly1, lx2, ly2, px, py))
+    return Math.sqrt(linePointDist2(lx1, ly1, lx2, ly2, px, py))
 }
 
 // check if two rays intersect
@@ -168,6 +153,7 @@ assert(rnd(1, 2) >= 1)
 assert(rnd(2, 1) >= 1)
 
 if (!Array.prototype.each) Array.prototype.each = Array.prototype.forEach
+
 if (!Array.prototype.equals) {
     Array.prototype.equals = function equals(other) {
         if (this.length !== other.length) return false
@@ -180,16 +166,6 @@ if (!Array.prototype.equals) {
         }
         return true
     }
-}
-
-if (!Array.prototype.remove) {
-    Array.prototype.remove = function remove(item) {
-        var at = this.indexOf(item)
-        if (at < 0) return null
-        this.splice(at, 1)
-        return this
-    }
-    assert([1,2,3,4,3].remove(3).equals([1,2,4,3]))
 }
 
 if (!Array.prototype.sum) {
@@ -225,6 +201,17 @@ if (!Object.forEach) {
             fn(obj[key], key, n)
         })
     }
+}
+if (!Object.each) Object.each = Object.forEach
+
+if (!Array.prototype.remove) {
+    Array.prototype.remove = function remove(item) {
+        var at = this.indexOf(item)
+        if (at < 0) return null
+        this.splice(at, 1)
+        return this
+    }
+    assert([1,2,3,4,3].remove(3).equals([1,2,4,3]))
 }
 
 if (!Array.prototype.shuffle) {
@@ -264,4 +251,3 @@ if (typeof(process) !== "undefined" && process.argv) {
         vm.runInContext(fs.readFileSync(file), context, {filename:file})
     }
 }
-

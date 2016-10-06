@@ -469,4 +469,3 @@ function row() {
     }
     return box
 }
-
