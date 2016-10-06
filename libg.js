@@ -226,6 +226,9 @@ function ensureEvents(context, eventname, name) {
 
 // if a delegate has event handlers, make the layer interactive and ensure the handlers are set
 function ensureInteractive(layer, delegate) {
+    layer.interactive = false
+    if (!delegate) return
+
     // TODO perhaps get scene from layer? not possible at the moment
     var context = _default_scene
     if (!context) return
@@ -272,7 +275,7 @@ class Layer {
 
     setDelegate(delegate) {
         this.delegate = delegate
-        if (delegate) ensureInteractive(this, delegate)
+        ensureInteractive(this, delegate)
     }
 
     /// remove this layer from the scene, can re-add afterwards
@@ -313,20 +316,33 @@ class Layer {
         return l.x >= 0 && l.x <= this.width && l.y >= 0 && l.y <= this.height
     }
 
-    /// return if {x,y} are in this layer
-    containsXY(x, y) {
+    /// return true if {x,y} in local coords are in this layer
+    containsLocalXY(x, y) {
         return x >= 0 && x <= this.width && y >= 0 && y <= this.height
+    }
+
+    /// return true if {x,y} as global coords are in this layer
+    containsXY(x, y) {
+        return this.contains({x,y})
     }
 
     // private
     draw(g, scene) {
-        if (this.style.background) {
-            g.fillStyle = this.style.background
+        if (this.style.background || this.style.border) {
             if (this.style.borderRadius) {
                 roundedRect(g, 0, 0, this.width, this.height, this.style.borderRadius)
-                g.fill()
             } else {
-                g.fillRect(0, 0, this.width, this.height)
+                g.beginPath()
+                g.rect(0, 0, this.width, this.height)
+            }
+            if (this.style.background) {
+                g.fillStyle = this.style.background
+                g.fill()
+            }
+            if (this.style.border) {
+                g.strokeStyle = this.style.border
+                g.lineWidth = this.style.borderWidth || 1
+                g.stroke()
             }
         }
         if (this.style.backgroundImage && imageCheck(this.style.backgroundImage)) {
@@ -345,7 +361,7 @@ class Layer {
     }
 
     fireEvent(x, y, globalx, globaly, event, name) {
-        if (!this.interactive || !this.containsXY(x, y)) return false
+        if (!this.interactive || !this.containsLocalXY(x, y)) return false
         return runEvent(this, x, y, globalx, globaly, event, name)
     }
 }
@@ -416,7 +432,7 @@ class Box extends Layer {
             var done = layer.fireEvent(x - layer.x, y - layer.y, globalx, globaly, event, name)
             if (done) return done
         }
-        if (!this.interactive || !this.containsXY(x, y)) return false
+        if (!this.interactive || !this.containsLocalXY(x, y)) return false
         return runEvent(this, x, y, globalx, globaly, event, name)
     }
 

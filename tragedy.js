@@ -8,12 +8,14 @@ function calc(farmers, size) {
 assert(calc([1, 1], 50).equals([5, 5]))
 assert(calc([1, 2, 3, 4], 100).equals([5, 10, 15, 20]))
 
+// return n.toFixed(1) but slice of the ".0"
 function roundText(n) {
     var s = n.toFixed(1)
     if (s.charAt(s.length - 1) === "0".charAt(0)) return s.slice(0, -2)
     return s
 }
 
+// render a cow with a color highlight around it
 function maskedCow(g, color, x, y, s) {
     var width = cow.width * s
     var height = cow.height * s
@@ -23,7 +25,7 @@ function maskedCow(g, color, x, y, s) {
     // cut out image
     g.globalCompositeOperation = "destination-out"
     g.drawImage(cow, x-width*s1, y-height*s1, width*s2, height*s2)
-    // fill cut with solid color
+    // fill empty space with solid color
     g.globalCompositeOperation = "destination-atop"
     g.fillStyle = color
     g.rect(Math.round(x - 20), Math.round(y - 20), Math.round(width + 40), Math.round(height + 40))
@@ -52,9 +54,11 @@ class Farm {
             this.x = event.delta.x
             this.y = event.delta.y
             if (event.last) {
-                if (field.contains(event)) {
+                var x = event.globalx - this.startx
+                var y = event.globaly - this.starty
+                if (field.containsXY(x + 30, y + 30)) {
                     this.cows += 1
-                    scene.root.add(new Cow(this, event.globalx - this.startx, event.globaly - this.starty))
+                    scene.root.add(new Cow(this, x, y))
                 } else if (Math.abs(this.x) < 5 && Math.abs(this.y) < 5) {
                     this.cows += 1
                     scene.root.add(new Cow(this, field.x + rndint(field.width - 30), field.y + rndint(field.height - 30)))
@@ -106,9 +110,11 @@ scene.onrender = ()=>{
     totalmilk = milkperfarm.sum()
 }
 
-// create graphics scene
+// create graphics scene, using manual layout
 scene.root.style.background = "white"
-var field = new Layer({z:-2, x:113, width:400, height:280, background:"#494", borderRadius:10})
+
+var field = new Layer({z:-2, x:113, y:3, width:400, height:280, background:"#494", borderRadius:10, border:"#272", borderWidth:2})
+
 var total = new Layer({z:1, x:123, y:240}, (g)=>{
     g.strokeStyle = "#282"
     g.fillStyle = "white"
@@ -127,6 +133,9 @@ var total = new Layer({z:1, x:123, y:240}, (g)=>{
         g.fillText(text, 0, 4)
     }
 })
+
 var farms = [new Farm(10, 30, "#F77"), new Farm(525, 30, "#77F")]
+
+// add everything to the scene
 scene.root.add(farms[0], field, farms[1], total)
 
