@@ -6,6 +6,7 @@ function calc(farmers, size) {
     return farmers.map(cows => totalcows <= 0? 0: cows * totalmilk / totalcows)
 }
 assert(calc([1, 1], 50).equals([5, 5]))
+assert(calc([1, 2, 3, 4], 100).equals([5, 10, 15, 20]))
 
 function roundText(n) {
     var s = n.toFixed(1)
@@ -54,6 +55,9 @@ class Farm {
                 if (field.contains(event)) {
                     this.cows += 1
                     scene.root.add(new Cow(this, event.globalx - this.startx, event.globaly - this.starty))
+                } else if (Math.abs(this.x) < 5 && Math.abs(this.y) < 5) {
+                    this.cows += 1
+                    scene.root.add(new Cow(this, field.x + rndint(field.width - 30), field.y + rndint(field.height - 30)))
                 }
                 this.x = this.startx = 0
                 this.y = this.starty = 0
@@ -104,12 +108,14 @@ scene.onrender = ()=>{
 
 // create graphics scene
 scene.root.style.background = "white"
-var field = new Layer({z:-2, x:113, width:400, height:280, background:"#494"})
-var total = new Layer({z:1, x:360, y:240}, (g)=>{
+var field = new Layer({z:-2, x:113, width:400, height:280, background:"#494", borderRadius:10})
+var total = new Layer({z:1, x:123, y:240}, (g)=>{
     g.strokeStyle = "#282"
     g.fillStyle = "white"
-    g.strokeText("total milk: "+ roundText(totalmilk), -1, 29)
-    g.fillText("total milk: "+ roundText(totalmilk), 0, 30)
+    var m = roundText(totalmilk)
+    var s = roundText(Math.max(0, size - totalcows * 10))
+    g.strokeText("grass: "+ s +", total milk: "+ m, -1, 29)
+    g.fillText("grass: "+ s +", total milk: "+ m, 0, 30)
 
     var s = []
     if (totalcows > 0 && farms.filter(farm => farm.cows !== farms[0].cows).length === 0) s.push("fair")

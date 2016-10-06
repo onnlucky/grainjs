@@ -154,6 +154,20 @@ function imageCheck(img) {
     return true
 }
 
+function roundedRect(g, x, y, width, height, r) {
+    g.beginPath()
+    g.moveTo(x + r, y)
+    g.lineTo(x + width - r, y)
+    g.quadraticCurveTo(x + width, y, x + width, y + r)
+    g.lineTo(x + width, y + height - r)
+    g.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
+    g.lineTo(x + r, y + height)
+    g.quadraticCurveTo(x, y + height, x, y + height - r)
+    g.lineTo(x, y + r)
+    g.quadraticCurveTo(x, y, x + r, y)
+    g.closePath()
+}
+
 class ImageLoader {
     constructor(scene) {
         this.images = {}
@@ -161,21 +175,19 @@ class ImageLoader {
         this.scene = scene
     }
 
-    fetch(url, cb) {
+    fetch(url) {
         var img = this.images[url]
-        if (img) return img // TODO invoke/track callback ...
+        if (img) return img
 
         this.loading += 1
         img = this.images[url] = new Image()
         img.onload = ()=> {
             console.log("loaded:", img.src)
             this.loaded()
-            if (cb) cb(null)
         }
         img.onerror = (event)=> {
             console.warn("error loading:", img.src)
             this.loaded()
-            if (cb) cb("error loading image")
         }
         img.src = url
         return img
@@ -310,7 +322,12 @@ class Layer {
     draw(g, scene) {
         if (this.style.background) {
             g.fillStyle = this.style.background
-            g.fillRect(0, 0, this.width, this.height)
+            if (this.style.borderRadius) {
+                roundedRect(g, 0, 0, this.width, this.height, this.style.borderRadius)
+                g.fill()
+            } else {
+                g.fillRect(0, 0, this.width, this.height)
+            }
         }
         if (this.style.backgroundImage && imageCheck(this.style.backgroundImage)) {
             g.drawImage(this.style.backgroundImage, 0, 0, this.width, this.height)
@@ -333,7 +350,7 @@ class Layer {
     }
 }
 
-// TODO is Array.sort() stable?
+// TODO Array.sort() is not a stable sort ... grr
 function zsortfn(left, right) { return left.z - right.z }
 function zsort(ls) {
     var il = ls.length
