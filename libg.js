@@ -33,6 +33,7 @@ class GEvent {
     /// follow a `ondown` event, and call `cb` for every `onmove` event
     /// last call will be from an `onup` event and `event.last` will be `true`
     follow(cb) {
+        if (this.domevent instanceof Touch) return startFollowTouch(this.domevent, cb, this)
         pushFollowHandlers(cb, this)
     }
 }
@@ -44,6 +45,25 @@ function runEvent(target, x, y, globalx, globaly, event, name) {
 
     var passToParent = handler.call(target.delegate, new GEvent(x, y, globalx, globaly, event, target))
     return !passToParent
+}
+
+function startFollowTouch(touch, handler, event) {
+    _followtouch[touch.identifier] = {handler, target: event.target, start:{x:event.globalx, y:event.globaly}}
+}
+
+function followTouch(follow, touch, globalx, globaly, name) {
+    var handler = follow.handler
+    var target = follow.target
+    var start = follow.start
+    if (!handler) return
+    assert(target)
+    var l = target.toGlobal()
+    var x = globalx - l.x
+    var y = globaly - l.y
+    var delta = {x:globalx - start.x, y:globaly - start.y}
+    var last = name === "onup"
+    handler.call(target.delegate, new GEvent(x, y, globalx, globaly, touch, target, last, delta))
+    _default_scene.schedule()
 }
 
 function pushFollowHandlers(handler, event) {
@@ -74,6 +94,7 @@ function _follow2(event, last) {
     var y = globaly - l.y
     var delta = {x:globalx - start.x, y:globaly - start.y}
     handler.call(target.delegate, new GEvent(x, y, globalx, globaly, event, target, last, delta))
+    event.preventDefault()
     _default_scene.schedule()
 }
 
@@ -209,18 +230,45 @@ function createScene(width, height, parent) {
     parent = parent || document.body
 
     var c = document.createElement("canvas")
+    c.setAttribute("style", "-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:-moz-none;-o-user-select:none;user-select:none;")
     parent.appendChild(c)
     var g = c.getContext("2d")
     return new GScene(g, c, width || 400, height || 300)
 }
 
-function ensureEvents(context, eventname, name) {
+function ensureMouseEvents(context, eventname, name) {
     if (context[eventname]) return
     context[eventname] = context.c[eventname] = (event)=> {
         context.schedule()
         var globalx = event.offsetX
         var globaly = event.offsetY
-        context.root.fireEvent(globalx, globaly, globalx, globaly, event, name)
+        var done = context.root.fireEvent(globalx, globaly, globalx, globaly, event, name)
+        if (done) event.preventDefault()
+    }
+}
+
+var _followtouch = {}
+var _multitouch = ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch
+function ensureTouchEvents(context, eventname, name) {
+    if (!_multitouch) return
+    if (context[eventname]) return
+    context[eventname] = context.c[eventname] = (event)=> {
+        context.schedule()
+        for (var i = 0; i < event.changedTouches.length; i++) {
+            var touch = event.changedTouches[i]
+            var globalx = touch.pageX - touch.target.offsetLeft
+            var globaly = touch.pageY - touch.target.offsetTop
+            var follow = _followtouch[touch.identifier]
+            if (follow) {
+                event.preventDefault()
+                followTouch(follow, touch, globalx, globaly, name)
+                if (eventname === "ontouchend" || eventname === "ontouchcancel") delete _followtouch[touch.identifier]
+                assert(Object.keys(_followtouch).length < 10)
+                continue
+            }
+            var done = context.root.fireEvent(globalx, globaly, globalx, globaly, touch, name)
+            if (done) event.preventDefault()
+        }
     }
 }
 
@@ -235,15 +283,24 @@ function ensureInteractive(layer, delegate) {
 
     if (delegate["ondown"]) {
         layer.interactive = true
-        ensureEvents(context, "onmousedown", "ondown")
+        ensureMouseEvents(context, "onmousedown", "ondown")
+        ensureTouchEvents(context, "ontouchstart", "ondown")
+        ensureTouchEvents(context, "ontouchend", "onup") // the rest is here for follow ...
+        ensureTouchEvents(context, "ontouchcancel", "onup")
+        ensureTouchEvents(context, "ontouchmove", "onmove")
     }
     if (delegate["onup"]) {
         layer.interactive = true
-        ensureEvents(context, "onmouseup", "onup")
+        ensureMouseEvents(context, "onmouseup", "onup")
+        ensureTouchEvents(context, "ontouchend", "onup")
+        ensureTouchEvents(context, "ontouchcancel", "onup")
     }
     if (delegate["onmove"]) {
         layer.interactive = true
-        ensureEvents(context, "onmousemove", "onmove")
+        ensureMouseEvents(context, "onmousemove", "onmove")
+        ensureTouchEvents(context, "ontouchmove", "onmove")
+        ensureTouchEvents(context, "ontouchend", "onup")
+        ensureTouchEvents(context, "ontouchcancel", "onup")
     }
 }
 
