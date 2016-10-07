@@ -1,5 +1,7 @@
 "use strict"
 
+// an little graphic that demonstrates the tragedy of the commons using cows on a field
+
 function calc(farmers, size) {
     var totalcows = farmers.sum()
     var totalmilk = Math.max(0, Math.min(totalcows * 5, size - totalcows * 5))
@@ -8,7 +10,7 @@ function calc(farmers, size) {
 assert(calc([1, 1], 50).equals([5, 5]))
 assert(calc([1, 2, 3, 4], 100).equals([5, 10, 15, 20]))
 
-// return n.toFixed(1) but slice of the ".0"
+// return n.toFixed(1) but slice of any ".0"
 function roundText(n) {
     var s = n.toFixed(1)
     if (s.charAt(s.length - 1) === "0".charAt(0)) return s.slice(0, -2)
@@ -36,6 +38,7 @@ function maskedCow(g, color, x, y, s) {
     g.drawImage(cow, x, y, width, height)
 }
 
+// keeps track of cows and milk, renders, and allows dragging cows around
 class Farm {
     constructor(x, y, color) {
         this.layer = new Layer({x, y, width:90, height:80}, this)
@@ -76,6 +79,7 @@ class Farm {
     }
 }
 
+// a cow on the field, belongs to a farm, can be touched to remove
 class Cow {
     constructor(farm, x, y) {
         this.farm = farm
@@ -93,6 +97,7 @@ class Cow {
     }
 }
 
+// setup mini graphics lib
 var scene = createScene(700, 250, "tragedy")
 var cow = scene.image("cow.png")
 
@@ -139,4 +144,3 @@ var farms = [new Farm(10, 30, "#F77"), new Farm(525, 30, "#77F")]
 
 // add everything to the scene
 scene.root.add(farms[0], field, farms[1], total)
-

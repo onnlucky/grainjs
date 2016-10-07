@@ -21,7 +21,9 @@ var sun = {
         })
     },
 
-    // this is how we can draw things, {0,0} is our layer {left,top}
+    // this is how we can draw, {0,0} is the layer {left,top}, but otherwise g is a normal canvas 2d context
+    // if any background or border was set in `style` that has already been drawn before draw is called
+    // drawing outside of the layer is perfectly fine ...
     draw: function(g) {
         g.strokeStyle = "red"
         g.rect(0, 0, this.layer.width, this.layer.height)
