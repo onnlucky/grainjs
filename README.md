@@ -1,12 +1,12 @@
-# grainjs a graphics library for javascript
+# grainjs, a graphics library for javascript
 
 A small opinionated library that makes working with html canvas easy and productive
 
-It provides a small scene graph system of Layers and Boxes that can handling events, have z indexing, have backgrounds, and more. It also provides image loading and other utilities. So that creating small interactive graphic thingies on the web is fun and easy.
+It provides a small scene graph system of Layers and Boxes that can handle events, have z indexing, have backgrounds, and more. It also provides image loading and other utilities. So that creating small interactive graphics for the web is fun and easy.
 
 It is opinionated. It uses the APIs you know for rendering to the canvas. It uses a system of delegation instead of inheritance. And it enhances the javascript environment with a few extras, like `[1,2,3].sum()` and `.max()` because nobody has time to wait for committees.
 
-But it does make it productive.
+But that does make it productive :)
 
 Example code, a draggable image:
 
