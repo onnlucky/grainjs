@@ -366,7 +366,6 @@ class Layer {
     }
 }
 
-// TODO Array.sort() is not a stable sort ... grr
 function zsortfn(left, right) { return left.z - right.z }
 function zsort(ls) {
     var il = ls.length
@@ -378,7 +377,7 @@ function zsort(ls) {
         if (ls[i].z !== z) { sort = true; break }
     }
     if (!sort) return ls
-    return ls.slice().sort(zsortfn)
+    return ls.slice().stablesort(zsortfn)
 }
 
 /// a container for layers, is a layer itself

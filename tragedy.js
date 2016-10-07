@@ -61,7 +61,7 @@ class Farm {
                     scene.root.add(new Cow(this, x, y))
                 } else if (Math.abs(this.x) < 5 && Math.abs(this.y) < 5) {
                     this.cows += 1
-                    scene.root.add(new Cow(this, field.x + rndint(field.width - 30), field.y + rndint(field.height - 30)))
+                    scene.root.add(new Cow(this, field.x + rndint(field.width - 30) - 10, field.y + rndint(field.height - 30) - 10))
                 }
                 this.x = this.startx = 0
                 this.y = this.starty = 0
@@ -93,7 +93,7 @@ class Cow {
     }
 }
 
-var scene = createScene(700, 300, "tragedy")
+var scene = createScene(700, 250, "tragedy")
 var cow = scene.image("cow.png")
 
 // data of the simulation
@@ -113,9 +113,9 @@ scene.onrender = ()=>{
 // create graphics scene, using manual layout
 scene.root.style.background = "white"
 
-var field = new Layer({z:-2, x:113, y:3, width:400, height:280, background:"#494", borderRadius:10, border:"#272", borderWidth:2})
+var field = new Layer({z:-2, x:113, y:5, width:400, height:230, background:"#494", borderRadius:10, border:"#272", borderWidth:2})
 
-var total = new Layer({z:1, x:123, y:240}, (g)=>{
+var total = new Layer({z:1, x:126, y:193}, (g)=>{
     g.strokeStyle = "#282"
     g.fillStyle = "white"
     var m = roundText(totalmilk)
@@ -125,8 +125,9 @@ var total = new Layer({z:1, x:123, y:240}, (g)=>{
 
     var s = []
     if (totalcows > 0 && farms.filter(farm => farm.cows !== farms[0].cows).length === 0) s.push("fair")
-    if (totalcows > size / 10) s.push("overuse")
-    if (fequals(totalmilk, size/2)) s.push("max")
+    if (totalcows > size / 5) s.push("dying")
+    else if (totalcows > size / 10) s.push("overuse")
+    else if (fequals(totalcows, size/10)) s.push("max")
     if (s.length) {
         var text = s.join(", ")
         g.strokeText(text, -1, 3)

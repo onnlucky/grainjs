@@ -228,6 +228,60 @@ if (!Array.prototype.shuffle) {
     assert(test.shuffle().indexOf(4) >= 0)
 }
 
+function stablesortcmp(l, r) { return l > r }
+
+function stablesortpass(buf1, buf2, cmp, chunk, len) {
+    var i = 0
+    var chunk2 = chunk * 2
+
+    // for all chunks in the list, merge them
+    for (var l = 0; l < len; l += chunk2) {
+        var r = l + chunk
+        var e = r + chunk
+        if (r > len) r = len
+        if (e > len) e = len
+        // now we have the left start, right start, and end
+
+        var li = l
+        var ri = r
+        while (true) {
+            if (li < r && ri < e) {
+                var le = buf1[li]
+                var re = buf1[ri]
+                if (cmp(le, re) <= 0) { buf2[i++] = le; li++ } else { buf2[i++] = re; ri++ }
+            } else if (li < r) {
+                buf2[i++] = buf1[li++]
+            } else if (ri < e) {
+                buf2[i++] = buf1[ri++]
+            } else {
+                break
+            }
+        }
+    }
+}
+
+function stablesort(ls, cmp) {
+    var len = ls.length
+    if (len <= 1) return ls
+    if (!cmp) cmp = stablesortcmp
+    var buf1 = ls
+    var buf2 = new Array(len)
+    for (var chunk = 1; chunk < len; chunk *= 2) {
+        stablesortpass(buf1, buf2, cmp, chunk, len)
+        var tmp = buf1; buf1 = buf2; buf2 = tmp // swap
+    }
+    if (buf1 !== ls) for (var i = 0; i < len; i++) ls[i] = buf1[i]
+    return ls
+}
+
+assert(stablesort([2, 1]).equals([1, 2]))
+assert(stablesort([3, 1, -200, 2]).equals([-200, 1, 2, 3]))
+assert(stablesort([10, 3, 1, -200, 2]).equals([-200, 1, 2, 3, 10]))
+
+if (!Array.prototype.stablesort) {
+    Array.prototype.stablesort = function(cmp) { return stablesort(this, cmp) }
+}
+
 // nodejs and running with `node [options] lib.js others.js ...` run as browser would do <script> tags
 // NOTE: this will not work: --someoption lol.js, workaround with --someoption=lol.js
 // TODO timers are broken because something in setTimeout, setInterval is not closing over properly
